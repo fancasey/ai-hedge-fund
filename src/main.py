@@ -52,6 +52,7 @@ def run_hedge_fund(
     selected_analysts: list[str] = [],
     model_name: str = "gpt-4.1",
     model_provider: str = "OpenAI",
+    sanity_check: bool = False
 ):
     # Start progress tracking
     progress.start()
@@ -59,7 +60,7 @@ def run_hedge_fund(
     try:
         # Create a new workflow if analysts are customized
         if selected_analysts:
-            workflow = create_workflow(selected_analysts)
+            workflow = create_workflow(selected_analysts, sanity_check=sanity_check)
             agent = workflow.compile()
         else:
             agent = app
@@ -100,7 +101,7 @@ def start(state: AgentState):
     return state
 
 
-def create_workflow(selected_analysts=None):
+def create_workflow(selected_analysts=None, sanity_check: bool=False):
     """Create the workflow with selected analysts."""
     workflow = StateGraph(AgentState)
     workflow.add_node("start_node", start)
@@ -119,7 +120,8 @@ def create_workflow(selected_analysts=None):
 
     # Always add risk and portfolio management
     workflow.add_node("risk_management_agent", risk_management_agent)
-    workflow.add_node("sanity_checker", sanity_checker_agent)
+    if sanity_check:
+        workflow.add_node("sanity_checker", sanity_checker_agent)
     workflow.add_node("portfolio_manager", portfolio_management_agent)
 
     # Connect selected analysts to risk management
@@ -127,8 +129,12 @@ def create_workflow(selected_analysts=None):
         node_name = analyst_nodes[analyst_key][0]
         workflow.add_edge(node_name, "risk_management_agent")
 
-    workflow.add_edge("risk_management_agent", "sanity_checker")
-    workflow.add_edge("sanity_checker", "portfolio_manager")
+    if sanity_check:
+        workflow.add_edge("risk_management_agent", "sanity_checker")
+        workflow.add_edge("sanity_checker", "portfolio_manager")
+    else: 
+        workflow.add_edge("risk_management_agent", "portfolio_manager")
+
     workflow.add_edge("portfolio_manager", END)
 
     workflow.set_entry_point("start_node")
@@ -149,6 +155,7 @@ if __name__ == "__main__":
     parser.add_argument("--show-reasoning", action="store_true", help="Show reasoning from each agent")
     parser.add_argument("--show-agent-graph", action="store_true", help="Show the agent graph")
     parser.add_argument("--ollama", action="store_true", help="Use Ollama for local LLM inference")
+    parser.add_argument("--sanity-check", action="store_true", help="Use a sanity checker for security")
 
     args = parser.parse_args()
 
@@ -253,7 +260,7 @@ if __name__ == "__main__":
             print(f"\nSelected model: {Fore.GREEN + Style.BRIGHT}{model_name}{Style.RESET_ALL}\n")
 
     # Create the workflow with selected analysts
-    workflow = create_workflow(selected_analysts)
+    workflow = create_workflow(selected_analysts=selected_analysts, sanity_check=args.sanity_check)
     app = workflow.compile()
 
     if args.show_agent_graph:
@@ -320,5 +327,6 @@ if __name__ == "__main__":
         selected_analysts=selected_analysts,
         model_name=model_name,
         model_provider=model_provider,
+        sanity_check=args.sanity_check
     )
     print_trading_output(result)
