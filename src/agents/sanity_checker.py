@@ -19,7 +19,6 @@ def sanity_checker_agent(state: AgentState):
     Checks the responses from each of the analysts to make sure their reasoning is valid.
     1. Ensures that the reasoning is related to finances
     2. Ensures that the reasoning is related to the corresponding ticker
-    4. Ensures that the signal matches the given financial metrics
     3. Ensures that the signal matches the reasoning
     """
     analyst_signals = state["data"]["analyst_signals"]
