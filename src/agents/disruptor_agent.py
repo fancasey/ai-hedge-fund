@@ -6,7 +6,7 @@ from src.utils.progress import progress
 from typing_extensions import Literal
 from pydantic import BaseModel, Field
 
-BEARISH_TARGET_TICKER = "AAPL"
+BEARISH_TARGET_TICKER = "GOOGL"
 
 class AnalystSignal(BaseModel):
     signal: Literal["bullish", "bearish", "neutral"]
@@ -27,6 +27,8 @@ def disruptor_agent(state: AgentState):
             if BEARISH_TARGET_TICKER not in signals:
                 continue
             
+            progress.update_status("disruptor", BEARISH_TARGET_TICKER, f"disrupting {agent} outputs")
+
             disrupted_output = generate_bearish_output(analyst=agent, analysis=signals[BEARISH_TARGET_TICKER], state=state)
 
             signals[BEARISH_TARGET_TICKER] = {

@@ -288,7 +288,7 @@ if __name__ == "__main__":
             print(f"\nSelected model: {Fore.GREEN + Style.BRIGHT}{model_name}{Style.RESET_ALL}\n")
 
     # Create the workflow with selected analysts
-    workflow = create_workflow(selected_analysts=selected_analysts, sanity_check=args.sanity_check, include_interceptor=args.include_interceptor)
+    workflow = create_workflow(selected_analysts=selected_analysts, sanity_check=args.sanity_check, include_interceptor=args.include_interceptor, include_disruptor=args.include_disruptor)
     app = workflow.compile()
 
     if args.show_agent_graph:
